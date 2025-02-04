@@ -59,19 +59,27 @@
     </div>
 
     <!-- Last Submission Section -->
+<!-- Last Submission Section -->
 <div id="last-submission-section" class="card shadow-sm p-4 mt-5">
     {% if last_submission %}
     <h4>Last Submission:</h4>
     <p><strong>Name:</strong> <span id="last-name">{{ last_submission.name }}</span></p>
     <p><strong>Band:</strong> <span id="last-band">{{ last_submission.band }}</span></p>
-    <p><strong>Year:</strong> <span id="last-year">{{ last_submission.year }}</span> (<span id="last-year-parity">{{ year_parity }}</span>)</p>
     <p><strong>Generated Text:</strong> <span id="last-generated-text">{{ last_submission.generated_text }}</span></p>
-    {% if last_submission.generated_image_url %}
-    <p><strong>Generated Image:</strong></p>
-    <img id="last-generated-image" src="{{ last_submission.generated_image_url }}" class="img-fluid rounded shadow-sm">
-    {% endif %}
+
+
+
+    <!-- Display Statistics -->
+    <h5 class="mt-4">Statistics</h5>
+    <ul>
+        <li><strong>Words Starting with Capital Letters:</strong> <span id="capitalized-count">{{ last_submission.capitalized_words_count }}</span></li>
+        <li><strong>Words Followed by Numbers:</strong> <span id="words-followed-by-numbers">{{ last_submission.words_followed_by_numbers }}</span></li>
+        <li><strong>Year Type:</strong> <span id="year-type">{{ year_parity }}</span></li>
+
+    </ul>
     {% endif %}
 </div>
+
 
 </div>
 
@@ -92,7 +100,6 @@
         </div>
     </div>
 </div>
-
 <script>
     $(document).ready(function () {
         $("#music-form").submit(function (e) {
@@ -125,6 +132,11 @@
                     $("#last-year-parity").text(response.is_even ? "Even" : "Odd");
                     $("#last-generated-text").text(response.generated_text);
 
+                    // Update Statistics
+                    $("#capitalized-count").text(response.capitalized_words_count);
+                    $("#words-followed-by-numbers").text(response.words_followed_by_numbers);
+                    $("#year-type").text(response.is_even ? "Even" : "Odd");
+
                     // If an image URL is present, update it; otherwise, remove the image
                     if (response.generated_image_url) {
                         let imgTag = $("#last-generated-image");
@@ -151,6 +163,7 @@
         });
     });
 </script>
+
 
 </body>
 </html>

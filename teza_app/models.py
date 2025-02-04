@@ -7,7 +7,8 @@ class Submission(models.Model):
     generated_text = models.TextField(blank=True, null=True)
     generated_image_url = models.URLField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    capitalized_words_count = models.IntegerField(default=0,blank=True, null=True)
+    words_followed_by_numbers = models.IntegerField(default=0,blank=True, null=True)
     def is_year_even(self):
         return self.year % 2 == 0
 
