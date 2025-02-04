@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favorite Band Form</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Favorite Music Band Form</h2>
+
+    <div class="card shadow-sm p-4">
+        <form id="music-form" method="POST" class="needs-validation" novalidate>
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="name" class="form-label">Your Name:</label>
+                <input type="text" id="name" name="name" class="form-control" required>
+                <div class="invalid-feedback">Please enter your name.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="band" class="form-label">Favorite Band & Why:</label>
+                <textarea id="band" name="band" class="form-control" rows="3" required></textarea>
+                <div class="invalid-feedback">Please explain why you like this band.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="year" class="form-label">Year:</label>
+                <select id="year" name="year" class="form-select" required>
+                    {% for year in years %}
+                        <option value="{{ year }}">{{ year }}</option>
+                    {% endfor %}
+                </select>
+                <div class="invalid-feedback">Please select a year.</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="api_key" class="form-label">API Key:</label>
+                <input type="text" id="api_key" name="api_key" class="form-control" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Submit</button>
+        </form>
+    </div>
+
+    <!-- Spinner -->
+    <div id="loading-spinner" class="text-center mt-4 d-none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Last Submission Section -->
+<div id="last-submission-section" class="card shadow-sm p-4 mt-5">
+    {% if last_submission %}
+    <h4>Last Submission:</h4>
+    <p><strong>Name:</strong> <span id="last-name">{{ last_submission.name }}</span></p>
+    <p><strong>Band:</strong> <span id="last-band">{{ last_submission.band }}</span></p>
+    <p><strong>Year:</strong> <span id="last-year">{{ last_submission.year }}</span> (<span id="last-year-parity">{{ year_parity }}</span>)</p>
+    <p><strong>Generated Text:</strong> <span id="last-generated-text">{{ last_submission.generated_text }}</span></p>
+    {% if last_submission.generated_image_url %}
+    <p><strong>Generated Image:</strong></p>
+    <img id="last-generated-image" src="{{ last_submission.generated_image_url }}" class="img-fluid rounded shadow-sm">
+    {% endif %}
+    {% endif %}
+</div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="resultModal" tabindex="-1" aria-labelledby="resultModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="resultModalLabel">Generated Content</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="generated-text"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $("#music-form").submit(function (e) {
+            e.preventDefault(); // Prevent form submission
+
+            const formData = $(this).serialize(); // Serialize form data
+
+            // Show the spinner
+            $("#loading-spinner").removeClass("d-none");
+
+            // Make the AJAX request
+            $.ajax({
+                url: "{% url 'generate' %}", // Update with your URL if needed
+                type: "POST",
+                data: formData,
+                success: function (response) {
+                    // Hide the spinner
+                    $("#loading-spinner").addClass("d-none");
+
+                    // Update modal content
+                    $("#generated-text").text(response.generated_text);
+
+                    // Show the modal
+                    $("#resultModal").modal("show");
+
+                    // Dynamically update the "Last Submission" section
+                    $("#last-name").text(response.name);
+                    $("#last-band").text(response.band);
+                    $("#last-year").text(response.year);
+                    $("#last-year-parity").text(response.is_even ? "Even" : "Odd");
+                    $("#last-generated-text").text(response.generated_text);
+
+                    // If an image URL is present, update it; otherwise, remove the image
+                    if (response.generated_image_url) {
+                        let imgTag = $("#last-generated-image");
+                        if (imgTag.length) {
+                            imgTag.attr("src", response.generated_image_url);
+                        } else {
+                            $("#last-submission-section").append(
+                                `<img id="last-generated-image" src="${response.generated_image_url}" class="img-fluid rounded shadow-sm">`
+                            );
+                        }
+                    } else {
+                        $("#last-generated-image").remove();
+                    }
+                },
+                error: function () {
+                    // Hide the spinner
+                    $("#loading-spinner").addClass("d-none");
+
+                    // Show an error message in the modal
+                    $("#generated-text").text("An error occurred. Please try again.");
+                    $("#resultModal").modal("show");
+                }
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
